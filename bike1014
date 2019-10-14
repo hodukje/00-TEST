@@ -1,0 +1,194 @@
+import numpy as np
+import pandas as pd
+from pandas import Series, DataFrame
+import matplotlib.pyplot as plt
+import mglearn
+import seaborn as sns
+
+from sklearn.model_selection import train_test_split
+
+#모델 3가지 
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.neighbors import KNeighborsRegressor
+
+train = pd.read_csv("C://Users//ktm//Anaconda_src//bike-sharing-demand//train.csv", parse_dates = ['datetime'])
+test = pd.read_csv("C://Users//ktm//Anaconda_src//bike-sharing-demand//test.csv", parse_dates = ['datetime'])
+sub = pd.read_csv("C://Users//ktm//Anaconda_src//bike-sharing-demand//sampleSubmission.csv")
+
+f_name = ['temp','atemp']
+X_train = train[f_name]
+y_train = train['count']
+
+X_test = test[f_name]
+
+#선형회귀 모델
+model = LinearRegression()
+model.fit(X_train,y_train)
+
+pred = model.predict(X_test)
+pred
+
+#모델2
+model2 = KNeighborsRegressor()
+model2.fit(X_train,y_train)
+
+pred = model2.predict(X_test)
+pred
+
+#모델3
+model3 = RandomForestRegressor()
+model3.fit(X_train , y_train)
+
+pred = model3.predict(X_test)
+pred
+
+#정규분포를 따르는지 따르지 않는지 확인하는 방법
+plt.hist(train['count'])
+
+
+##범주형 컬럼과 수치형 컬럼을 만들어 본다. 
+##범주형컬럼: weather holiday season workingday -> 범주형
+##수치형컬럼: temp atemp humidity windspeed -> 수치형
+
+#범주형 그래프
+col_names = ['weather', 'holiday', 'season', 'workingday']
+i=0
+plt.figure(figsize = (12,10))
+
+for name in col_names:
+    i = i+1
+    plt.subplot(2,2,i)
+    sns.countplot(name, data = train)
+    
+plt.show()
+
+
+
+#범주형 그래프와 수치형 그래프 만들기 (4행 2열)
+#train왼쪽 test오른쪽 -> 4행 2열 
+#for문돌리기
+
+col_names = ['weather', 'holiday', 'season', 'workingday']
+
+col_names_num = ['temp', 'atemp', 'humidity', 'windspeed']
+i=0
+plt.figure(figsize = (12,20))
+
+for name in col_names:
+    i = i+1
+    plt.subplot(4,2,i)
+    sns.countplot(name, data = train)
+    
+    i = i+1
+    plt.subplot(4,2,i)
+    sns.countplot(name, data = test)
+    
+#train에 하나가 들어가고 test에 다음번호가 들어간다.
+    
+    
+plt.show()
+
+
+
+num_names = ['temp', 'atemp', 'humidity', 'windspeed']
+#수치형 -> boxplot, countplot
+#plt.subplot
+i = 0
+plt.figure(figsize = (15,20))
+
+for name in num_names:
+    i = i+1
+    plt.subplot(4,2,i)
+    sns.boxplot(name, data = train)
+    
+    i = i+1
+    plt.subplot(4,2,i)
+    sns.boxplot(name, data = test)
+    
+plt.show()
+
+#train왼쪽 test오른쪽 -> 4행 2열 
+#for문돌리기
+
+col_names = ['weather', 'holiday', 'season', 'workingday']
+count = ['count']
+col_names_num = ['temp', 'atemp', 'humidity', 'windspeed']
+i=0
+plt.figure(figsize = (12,20))
+
+for name in col_names:
+    i = i+1
+    plt.subplot(4,2,i)
+    sns.catplot(x = name, y= count , data = train)
+
+    
+#train에 하나가 들어가고 test에 다음번호가 들어간다.
+    
+    
+plt.show()
+
+#년별, 월별, 일별, 시별, 분별, 초별로 bike를 타는 횟수를 count 할 수 있다.
+#datetime에 년월일 시분초로 표현하기
+print(train.datetime.dt.year)
+print(train.datetime.dt.day)
+print(train['datetime'].dt.year)
+
+
+#backup를 통해 데이터를 보호하기
+new_tr = train.copy()
+new_test = test.copy()
+
+#datetime를 이용하여 년/월/일/시/분/초로 쪼개어 년/월/일/시/분/초 컬럼으로 만들어 저장하기
+
+new_tr['year'] = train['datetime'].dt.year
+new_tr['month'] = train['datetime'].dt.month
+new_tr['day'] = train['datetime'].dt.day
+new_tr['hour'] = train['datetime'].dt.hour
+new_tr['minute'] = train['datetime'].dt.minute
+new_tr['second'] = train['datetime'].dt.second
+new_tr['dayofweek'] = train['datetime'].dt.dayofweek
+
+#년월일시분초 컬럼을 생성하여 넣기
+new_tr[['datatime' , 'year' , 'month' , 'day' , 'hour' , 'minute' , 'second']]
+
+#test에도 그대로 적용
+new_test['year'] = test['datetime'].dt.year
+new_test['month'] = test['datetime'].dt.month
+new_test['day'] = test['datetime'].dt.day
+new_test['hour'] = test['datetime'].dt.hour
+new_test['minute'] = test['datetime'].dt.minute
+new_test['second'] = test['datetime'].dt.second
+new_test['dayofweek'] = test['datetime'].dt.dayofweek
+
+new_test[ ['datetime', 'year', 'month', 'day', 'hour', 'minute', 'second'] ]
+
+#년월일시분초 컬럼과 count컬럼과의 관계 그래프 만들어 표현하기 -> barplot으로 표현
+
+datetime_names = ['year', 'month', 'day', 
+                  'hour', 'minute', 'dayofweek']
+
+i = 0
+plt.figure(figsize=(15,10))
+for name in datetime_names:
+    i = i + 1
+    plt.subplot(2,3, i)
+    sns.barplot(x=name, y='count', data=new_tr)
+    
+    
+#countplot으로 만들기
+datetime_names = ['year', 'month', 'day', 
+                  'hour']
+
+i = 0
+plt.figure(figsize=(12,20))
+for name in datetime_names:
+    i = i + 1
+    plt.subplot(6,2, i)
+    sns.countplot(name, data = new_tr)
+    
+    i = i + 1
+    plt.subplot(6,2, i)
+    sns.countplot(name, data = new_test)
+    
+plt.show()
